@@ -1,6 +1,6 @@
 name: LightChat
 main: petterim1.lightchat.Main
-version: "${pom.version}"
+version: "1.0.0"
 api: ["1.0.0"]
 author: PetteriM1
 softdepend: ["PlaceholderAPI", "LuckPerms", "Multipass"]
