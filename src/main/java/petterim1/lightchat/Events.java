@@ -33,12 +33,16 @@ public class Events implements Listener {
         long id = player.getId();
         int tick = plugin.getServer().getTick();
         int time = lastTime.getOrDefault(id, 0);
+
+        // --- AntiSpam ---
         if (plugin.settings.antiSpam && time > tick) {
             player.sendMessage(plugin.settings.antispamMessage);
             lastTime.put(id, tick + plugin.settings.antiSpamThreshold);
             event.setCancelled(true);
             return;
         }
+
+        // --- Limpieza y longitud ---
         String message = plugin.settings.cleanMessages ? TextFormat.clean(event.getMessage()) : event.getMessage();
         if (message.length() > plugin.settings.maxMessageLength) {
             player.sendMessage(plugin.settings.messageTooLongMessage);
@@ -46,12 +50,17 @@ public class Events implements Listener {
             event.setCancelled(true);
             return;
         }
-        if (plugin.settings.duplicatedMessageCheck && lastMessage.getOrDefault(id, "").equals(message) && time + plugin.settings.duplicatedMessageThreshold > tick) {
+
+        // --- Anti duplicado ---
+        if (plugin.settings.duplicatedMessageCheck && lastMessage.getOrDefault(id, "").equals(message)
+                && time + plugin.settings.duplicatedMessageThreshold > tick) {
             player.sendMessage(plugin.settings.duplicatedMessageMessage);
             lastTime.put(id, tick + plugin.settings.antiSpamThreshold);
             event.setCancelled(true);
             return;
         }
+
+        // --- Palabras prohibidas ---
         for (String banned : plugin.settings.blacklist) {
             if (message.contains(banned)) {
                 player.sendMessage(plugin.settings.blacklistMessage);
@@ -60,19 +69,36 @@ public class Events implements Listener {
                 return;
             }
         }
+
+        // --- Actualizar tiempo y mensaje ---
         lastTime.put(id, tick + plugin.settings.antiSpamThreshold);
         lastMessage.put(id, message);
+
+        // --- Reemplazos (filtros) ---
         for (String filtered : plugin.settings.filter) {
-            message = Pattern.compile(filtered, Pattern.CASE_INSENSITIVE).matcher(message).replaceAll(plugin.settings.replaceFilter);
+            message = Pattern.compile(filtered, Pattern.CASE_INSENSITIVE).matcher(message)
+                    .replaceAll(plugin.settings.replaceFilter);
         }
+
+        // --- Límite de Unicode ---
         if (plugin.settings.limitUnicode) {
             message = pattern.matcher(message).replaceAll(plugin.settings.replaceUnicode);
         }
-        String group = groupCache.get(event.getPlayer().getId());
-        if (group == null) {
-            group = plugin.api.getGroup(event.getPlayer());
-            groupCache.put(event.getPlayer().getId(), group);
+
+        // --- NUEVO: lógica tipo ChatCo ---
+        // Si el mensaje empieza con ">", se colorea en verde, incluso con cleanMessages activado
+        String originalMsg = event.getMessage();
+        if (originalMsg.startsWith(">")) {
+            message = TextFormat.GREEN + message;
         }
+
+        // --- Formato final ---
+        String group = groupCache.get(id);
+        if (group == null) {
+            group = plugin.api.getGroup(player);
+            groupCache.put(id, group);
+        }
+
         event.setFormat(plugin.api.formatMessage(player, message, group));
     }
 
@@ -89,3 +115,4 @@ public class Events implements Listener {
         lastMessage.remove(id);
     }
 }
+
