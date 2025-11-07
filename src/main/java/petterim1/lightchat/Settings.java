@@ -45,10 +45,12 @@ public class Settings {
         checkProvider();
     }
 
+    @SuppressWarnings("unchecked")
     private void loadConfig() {
         Config cfg = plugin.getConfig();
         int current = 2;
         int ver = cfg.getInt("configVersion");
+
         if (ver != current) {
             if (ver < 2) {
                 cfg.set("formatDisplayName", false);
@@ -59,6 +61,7 @@ public class Settings {
             cfg.save();
             plugin.getLogger().notice("Config file updated");
         }
+
         try {
             antiSpam = cfg.getBoolean("antiSpam");
             antiSpamThreshold = cfg.getInt("antiSpamThreshold");
@@ -76,12 +79,28 @@ public class Settings {
             blacklist = cfg.getStringList("blacklist");
             blacklistMessage = cfg.getString("blacklistMessage");
             defaultFormat = cfg.getString("defaultFormat");
-            format = (Map<String, String>) cfg.get("format");
-            format.put("", defaultFormat);
+
+            // 🔧 Asegurar que format nunca sea null
+            Object rawFormat = cfg.get("format");
+            if (rawFormat instanceof Map) {
+                format = (Map<String, String>) rawFormat;
+            } else {
+                format = new HashMap<>();
+            }
+            format.putIfAbsent("default", defaultFormat);
+
             formatDisplayName = cfg.getBoolean("formatDisplayName");
             defaultNameFormat = cfg.getString("defaultNameFormat");
-            nameFormat = (Map<String, String>) cfg.get("nameFormat");
-            nameFormat.put("", defaultNameFormat);
+
+            // 🔧 Asegurar que nameFormat nunca sea null
+            Object rawNameFormat = cfg.get("nameFormat");
+            if (rawNameFormat instanceof Map) {
+                nameFormat = (Map<String, String>) rawNameFormat;
+            } else {
+                nameFormat = new HashMap<>();
+            }
+            nameFormat.putIfAbsent("default", defaultNameFormat);
+
         } catch (Exception ex) {
             plugin.getLogger().error("Config error! Please fix your config", ex);
         }
