@@ -1,7 +1,7 @@
 name: LightChat
 main: petterim1.lightchat.Main
-version: "1.0.0"
-api: ["1.0.0"]
+version: "1.0.14"
+api: ["1.0.14"]
 author: PetteriM1
 softdepend: ["PlaceholderAPI", "LuckPerms", "Multipass"]
 website: https://cloudburstmc.org/resources/lightchat.661/
